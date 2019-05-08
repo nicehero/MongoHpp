@@ -6,6 +6,10 @@
 
 inline void nlogerr(const char *msg, ...)
 {
+	const int TIMEBUF_LENGTH = 12;
+	const int LOGBUF_MAXLEN = 1024 * 1024;
+	char LOGBUF[LOGBUF_MAXLEN + 1] = { 0 };
+	char 		m_timebuf[20];
 	const int reservedLen = 1;//for \n
 	ui64 now = time();
 #ifdef WIN32
