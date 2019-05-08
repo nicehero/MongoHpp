@@ -11,7 +11,7 @@ inline void nlogerr(const char *msg, ...)
 	char LOGBUF[LOGBUF_MAXLEN + 1] = { 0 };
 	char 		m_timebuf[20];
 	const int reservedLen = 1;//for \n
-	ui64 now = time();
+	ui64 now = time(0);
 #ifdef WIN32
 	tm tm_now;
 	localtime_s(&tm_now, (time_t*)&now);
