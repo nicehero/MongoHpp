@@ -1,5 +1,5 @@
 
-A easy c++11 mongodb library,depend on mongoc,And no boost!!!!
+A easy c++11 mongodb driver library,depend on mongoc,And no boost!!!!
 
 Only header files!!!
 
