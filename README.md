@@ -13,7 +13,7 @@ Support Windows and Linux!!!
 
 sudo apt-get install cmake libssl-dev libsasl2-dev
 git clone https://github.com/nicehero/MongoHpp
-cd EasyMongoHpp/dep
+cd MongoHpp/dep
 python build.py
 cd ..
 #show you the code
