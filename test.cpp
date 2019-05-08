@@ -7,12 +7,12 @@
 void test(const char* dbconnection,const char* dbname)
 {
 	auto pool = std::make_shared<nicehero::MongoConnectionPool>();
-	if (!pool.init(dbconnection,dbname))
+	if (!pool->init(dbconnection,dbname))
 	{
 		printf("error db %s\n",dbconnection);
 		return;
 	}
-	auto client = pool.popClient();
+	auto client = pool->popClient();
 	if (!client)
 	{
 		return;
