@@ -12,7 +12,7 @@ Support Windows and Linux!!!
 #how to use
 
 sudo apt-get install cmake libssl-dev libsasl2-dev
-git clone https://github.com/nicehero/EasyMongoHpp
+git clone https://github.com/nicehero/MongoHpp
 cd EasyMongoHpp/dep
 python build.py
 cd ..
