@@ -42,7 +42,7 @@ void test(const char* dbconnection,const char* dbname)
 			NBSON_T("_id", BCON_INT64(100)),
 			*obj);
 		//find
-		auto cursor = client->find("easy", NBSON_T("_id", BCON_INT64(103)), nicehero::Bson(nullptr));
+		auto cursor = client->find("easy", NBSON_T("_id", BCON_INT64(100)), nicehero::Bson(nullptr));
 		while (auto r = cursor->fetch())
 		{
 			if (r->isInt64("oo.xhello"))
