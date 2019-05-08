@@ -3,7 +3,6 @@
 #include <time.h>
 #include <string.h>
 #include <chrono>
-#include "Clock.h"
 
 inline void nlogerr(const char *msg, ...)
 {
