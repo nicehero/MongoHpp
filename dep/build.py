@@ -34,7 +34,14 @@ else:
 	os.chdir('../')
 	do_os('mv mongo-c-driver/include/libmongoc-1.0/mongoc include/')
 	do_os('mv mongo-c-driver/include/libbson-1.0/bson include/')
-	do_os('mv mongo-c-driver/lib/* lib/')
+	try:
+		do_os('mv mongo-c-driver/lib/* lib/')
+	except:
+		pass
+	try:
+		do_os('mv mongo-c-driver/lib64/* lib/')
+	except:
+		pass
 	do_os('mv mongo-c-driver/bin/* lib/')
 	do_os('rm -rf mongo-c-driver')
 	do_os('rm -rf build_mongoc')
