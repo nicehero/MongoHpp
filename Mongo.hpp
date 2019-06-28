@@ -10,6 +10,7 @@
 #include <list>
 #include "NoCopy.h"
 #include "Log.hpp"
+#include "CopyablePtr.hpp"
 
 namespace nicehero
 {
@@ -28,7 +29,7 @@ namespace nicehero
 	};
 
 
-	using MongoCursorPtr = std::shared_ptr<MongoCursor>;
+	using MongoCursorPtr = CopyablePtr<MongoCursor>;
 	class MongoConnectionPool;
 	class MongoClient
 		:public NoCopy
