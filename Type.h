@@ -147,7 +147,37 @@ namespace nicehero
 		std::unique_ptr<char[]> m_Data;
 	};
 
+	class Code
+	{
+	public:
+		Code(ui32 value, const char *file, ui32 line);
+		template <class T>
+		operator T() const;
+	private:
+		ui32	m_value;
+		const char * m_file;
+		ui32	m_line;
+	};
+
+	template <class T>
+	Code::operator T() const
+	{
+		T ret;
+		ret.value = m_value;
+		ret.file = m_file;
+		ret.line = m_line;
+		return ret;
+	}
+
+	inline Code::Code(ui32 value, const char *file, ui32 line)
+	{
+		m_value = value;
+		m_file = file;
+		m_line = line;
+	}
 }
+
+#define MAKE_CODE(VALUE) nicehero::Code(VALUE,__FILE__,__LINE__)
 
 template <typename T>
 class Initializable
