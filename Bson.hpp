@@ -4,8 +4,12 @@
 #include "Type.h"
 #include <string>
 #include <memory>
+#include "Log.hpp"
+
 namespace nicehero
 {
+	class Bson;
+	typedef std::unique_ptr<Bson> BsonPtr;
 	class Bson
 	{
 	public:
@@ -28,6 +32,60 @@ namespace nicehero
 		operator bson_t*() const
 		{
 			return m_bson;
+		}
+		void appendBson(const std::string& k, const Bson& o)
+		{
+			bson_append_document(m_bson, k.c_str(),(int)k.length(), o.m_bson);
+		}
+		void merge(const Bson& o)
+		{
+			if (!o.m_bson)
+			{
+				return;
+			}
+			bson_iter_t iter;
+			if (!bson_iter_init(&iter, o.m_bson))
+			{
+				return;
+			}
+			do 
+			{
+				bson_append_iter(m_bson, bson_iter_key(&iter), bson_iter_key_len(&iter), &iter);
+			} while (bson_iter_next(&iter));
+		}
+
+		bool isObject(const char* dotkey)
+		{
+			bson_iter_t iter, iter2;
+			if (!m_bson
+				|| !bson_iter_init(&iter, m_bson)
+				|| !bson_iter_find_descendant(&iter, dotkey, &iter2))
+			{
+				return false;
+			}
+			auto t = bson_iter_type(&iter2);
+			return  t == BSON_TYPE_DOCUMENT || t == BSON_TYPE_NULL || t == BSON_TYPE_UNDEFINED;
+		}
+		BsonPtr asObject(const char* dotkey)
+		{
+			bson_iter_t iter, iter2;
+			if (bson_iter_init(&iter, m_bson)
+				&& bson_iter_find_descendant(&iter, dotkey, &iter2))
+			{
+				auto t = bson_iter_type(&iter2);
+				if (t == BSON_TYPE_DOCUMENT)
+				{
+					const uint8_t *buf;
+					uint32_t len;
+					bson_iter_document(&iter, &len, &buf);
+					return BsonPtr(new Bson(bson_new_from_data(buf, len)));
+				}
+				else if (t != BSON_TYPE_NULL && t != BSON_TYPE_UNDEFINED)
+				{
+					nlogerr("Bson::asObject error");
+				}
+			}
+			return BsonPtr(new Bson(bson_new()));
 		}
 		bool isString(const char* dotkey)
 		{
@@ -108,10 +166,17 @@ namespace nicehero
 			}
 			return 0.0;
 		}
-
 		bson_t* m_bson = nullptr;
+
+		static BsonPtr createBsonPtr()
+		{
+			return BsonPtr(new Bson(bson_new()));
+		}
+		static BsonPtr createBsonPtr(const Bson& doc)
+		{
+			return BsonPtr(new Bson(bson_copy(doc.m_bson)));
+		}
 	};
-	typedef std::unique_ptr<Bson> BsonPtr;
 }
 #ifndef NBSON
 #define NBSON(...) nicehero::BsonPtr(new ::nicehero::Bson(bcon_new (NULL, __VA_ARGS__, (void *) NULL))) //BCON_NEW

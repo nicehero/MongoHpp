@@ -31,6 +31,19 @@ namespace nicehero
 
 	using MongoCursorPtr = CopyablePtr<MongoCursor>;
 	class MongoConnectionPool;
+	class MongoUpdater
+	{
+	public:
+		MongoUpdater();
+		MongoUpdater(const Bson& doc);
+		void set(BsonPtr&& doc);
+		void unset(BsonPtr&& doc);
+		bool available() const;
+
+		operator BsonPtr() const;
+		std::vector<BsonPtr> m_sets;
+		std::vector<BsonPtr> m_unsets;
+	};
 	class MongoClient
 		:public NoCopy
 	{
@@ -48,7 +61,7 @@ namespace nicehero
 
 		bson_error_t update(const std::string& collection
 			, const Bson& query
-			, const Bson& doc
+			, const MongoUpdater& doc
 			, mongoc_update_flags_t flags = MONGOC_UPDATE_NONE
 			, bool specialWriteConcern = false
 			, int writeConcern = 1
@@ -94,7 +107,7 @@ namespace nicehero
 
 		bson_error_t update(const std::string& collection
 			, const Bson& query
-			, const Bson& doc
+			, const MongoUpdater& doc
 			, mongoc_update_flags_t flags = MONGOC_UPDATE_NONE
 			, bool specialWriteConcern = false
 			, int writeConcern = 1
@@ -251,7 +264,7 @@ namespace nicehero
 	}
 
 
-	inline bson_error_t MongoConnectionPool::update(const std::string& collection, const Bson& query, const Bson& doc, mongoc_update_flags_t flags /*= MONGOC_UPDATE_NONE */, bool specialWriteConcern /*= false */, int writeConcern /*= 1 */)
+	inline bson_error_t MongoConnectionPool::update(const std::string& collection, const Bson& query, const MongoUpdater& doc, mongoc_update_flags_t flags /*= MONGOC_UPDATE_NONE */, bool specialWriteConcern /*= false */, int writeConcern /*= 1 */)
 	{
 		bson_error_t error;
 		bson_set_error(&error, 0, 3, "pool empty");
@@ -322,10 +335,15 @@ namespace nicehero
 		return error;
 	}
 	
-	inline bson_error_t nicehero::MongoClient::update(const std::string& collection, const Bson& query, const Bson& doc, mongoc_update_flags_t flags /*= MONGOC_UPDATE_NONE */, bool specialWriteConcern /*= false */, int writeConcern /*= 1 */)
+	inline bson_error_t nicehero::MongoClient::update(const std::string& collection, const Bson& query, const MongoUpdater& doc, mongoc_update_flags_t flags /*= MONGOC_UPDATE_NONE */, bool specialWriteConcern /*= false */, int writeConcern /*= 1 */)
 	{
 		bson_error_t error;
 		bson_set_error(&error, 0, 2, "db error");
+		if (!doc.available())
+		{
+			bson_set_error(&error, 0, 2, "!doc.available()");
+			return error;
+		}
 		auto collection_ = mongoc_client_get_collection(m_client, m_dbname.c_str(), collection.c_str());
 		if (!collection_)
 		{
@@ -342,7 +360,7 @@ namespace nicehero
 			}
 			mongoc_write_concern_set_w(write_concern, writeConcern);
 		}
-		if (!mongoc_collection_update(collection_, flags, query.m_bson, doc.m_bson, write_concern, &error))
+		if (!mongoc_collection_update(collection_, flags, query.m_bson, ((BsonPtr)doc)->m_bson, write_concern, &error))
 		{
 			if (write_concern)
 			{
@@ -388,6 +406,60 @@ namespace nicehero
 			return MongoClientPtr();
 		}
 		return MongoClientPtr(new MongoClient(*this,c));
+	}
+
+	inline void MongoUpdater::set(BsonPtr&& doc)
+	{
+		m_sets.push_back(std::move(doc));
+	}
+
+	inline void MongoUpdater::unset(BsonPtr&& doc)
+	{
+		m_unsets.push_back(std::move(doc));
+	}
+
+	inline MongoUpdater::operator BsonPtr() const
+	{
+		if (m_sets.empty() || m_unsets.empty())
+		{
+			return nullptr;
+		}
+		auto r = Bson::createBsonPtr();
+		if (m_sets.size() > 0)
+		{
+			auto sets = Bson::createBsonPtr();
+			for (auto& i : m_sets)
+			{
+				sets->merge(*i);
+			}
+			r->appendBson("$set", *sets);
+		}
+		if (m_unsets.size() > 0)
+		{
+			auto unsets = Bson::createBsonPtr();
+			for (auto& i : m_unsets)
+			{
+				unsets->merge(*i);
+			}
+			r->appendBson("$unset", *unsets);
+		}
+		return r;
+	}
+	inline bool MongoUpdater::available() const
+	{
+		if (m_sets.empty() || m_unsets.empty())
+		{
+			return false;
+		}
+		return true;
+	}
+	inline MongoUpdater::MongoUpdater()
+	{
+
+	}
+	inline MongoUpdater::MongoUpdater(const Bson& doc)
+	{
+		set(Bson::createBsonPtr(doc));
 	}
 
 }
