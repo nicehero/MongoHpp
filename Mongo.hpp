@@ -420,7 +420,7 @@ namespace nicehero
 
 	inline MongoUpdater::operator BsonPtr() const
 	{
-		if (m_sets.empty() || m_unsets.empty())
+		if (m_sets.empty() && m_unsets.empty())
 		{
 			return nullptr;
 		}
@@ -447,7 +447,7 @@ namespace nicehero
 	}
 	inline bool MongoUpdater::available() const
 	{
-		if (m_sets.empty() || m_unsets.empty())
+		if (m_sets.empty() && m_unsets.empty())
 		{
 			return false;
 		}

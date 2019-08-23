@@ -48,10 +48,10 @@ namespace nicehero
 			{
 				return;
 			}
-			do 
+			while (bson_iter_next(&iter))
 			{
 				bson_append_iter(m_bson, bson_iter_key(&iter), bson_iter_key_len(&iter), &iter);
-			} while (bson_iter_next(&iter));
+			}
 		}
 
 		bool isObject(const char* dotkey)
